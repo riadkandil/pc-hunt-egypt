@@ -160,7 +160,7 @@ function specChips(i) {
   const order = { gpu: ["chip", "vram", "series"], cpu: ["model", "socket", "pack"], motherboard: ["chipset", "form", "ddr", "wifi"],
     ram: ["ddr", "kit", "speed", "cl"], ssd: ["capacity", "interface", "pcie"], psu: ["watt", "rating", "modular"],
     monitor: ["size", "resolution", "hz", "panel"], laptop: ["cpu", "gpu", "ram", "storage"], desktop: ["cpu", "gpu", "ram", "storage"] }[i.category] || Object.keys(i.specs);
-  return order.filter(k => i.specs[k] != null && !(k === "wifi" && i.specs[k] === "No")).slice(0, 5)
+  return order.filter(k => k !== "condition" && i.specs[k] != null && !(k === "wifi" && i.specs[k] === "No")).slice(0, 5)
     .map(k => `<span class="spec">${esc(k === "wifi" ? "Wi-Fi" : fmtSpec(k, i.specs[k]))}</span>`).join("");
 }
 
