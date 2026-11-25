@@ -64,8 +64,9 @@ Condition (New / Used / Open box / Refurbished) for everything.
 
 ## Static site (`pchunt/export_site.py`, `pchunt/static/local.js`, `pchunt/publish.py`)
 
-GitHub Pages only serves files, so the export writes the live offers as JSON (`data/offers-in.json` in stock, loaded
-first; `data/offers-out.json` sold out, loaded on demand; price history in `data/hist/`) next to the same front end.
+GitHub Pages only serves files, so the export writes the live offers as JSON (`data/offers-in-<n>.json` in stock, loaded
+first; `data/offers-out-<n>.json` sold out, loaded on demand; 40,000 offers per file, since GitHub refuses files over
+100 MB; price history in `data/hist/`) next to the same front end.
 `local.js` answers the `/api/*` calls in the browser: the same index text and query language as the FTS5 index, a
 bm25-style ranking, filters, facets, spelling fixes and "best price per model". Category intent uses a word list plus a
 fallback (most matches in one PC category -> open it). The daily task (`daily_scrape.cmd`) publishes after scraping.

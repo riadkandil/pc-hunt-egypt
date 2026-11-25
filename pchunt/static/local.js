@@ -5,7 +5,7 @@ const DATA = "data/";
 let META = null, STORES = null, SIDX = null;
 let OFFERS = [];             // offer objects; position = doc number in the text index
 const BYID = new Map();
-let SOLD = {};               // model_key -> sold-out listings (before offers-out.json is loaded)
+let SOLD = {};               // model_key -> sold-out listings (before the offers-out parts are loaded)
 let OUT_LOADED = false, OUT_PROMISE = null, IN_PROMISE = null;
 let IDX = null;              // text index, rebuilt when offers are added
 const HIST = new Map();      // shard -> {id: [[day, price, stock], ...]}
@@ -62,16 +62,19 @@ async function loadIn() {
   META = await json(DATA + "meta.json");
   STORES = await json(DATA + "stores.json");
   SIDX = Object.fromEntries(STORES.map(s => [s.id, s]));
-  const d = await json(DATA + "offers-in.json");
-  SOLD = d.sold || {};
-  addRows(d);
+  const parts = await loadParts("in");
+  SOLD = parts[0].sold || {};
+  parts.forEach(addRows);
   // build the text index while the visitor looks at the first page (about a second)
   setTimeout(() => (window.requestIdleCallback || setTimeout)(() => index(), { timeout: 4000 }), 300);
 }
 const ready = () => (IN_PROMISE ??= loadIn());
 function loadOut() {
-  return OUT_PROMISE ??= json(DATA + "offers-out.json").then(d => { d.out = true; addRows(d); OUT_LOADED = true; });
+  return OUT_PROMISE ??= loadParts("out").then(ps => { ps.forEach(d => { d.out = true; addRows(d); }); OUT_LOADED = true; });
 }
+// offers-<kind>-<n>.json, fetched in parallel, kept in order (doc numbers stay stable)
+const loadParts = kind => Promise.all(Array.from({ length: (META.parts || {})[kind] || 1 },
+                                                 (_, n) => json(`${DATA}offers-${kind}-${n}.json`)));
 
 // ------------------------------------------------------------------ text index
 function buildIndex() {

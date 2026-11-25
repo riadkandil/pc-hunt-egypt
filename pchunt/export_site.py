@@ -6,8 +6,9 @@ browser (static/local.js answers the same /api/* calls as server.py).
 Files (data/):
     meta.json          categories, labels, facets, totals, last run
     stores.json        the Stores page
-    offers-in.json     every live in-stock offer (loaded first)
-    offers-out.json    live sold-out offers (loaded only when "In stock only" is off or a drawer asks for them)
+    offers-in-<n>.json   every live in-stock offer, PART_ROWS per file (loaded first, in parallel; part 0 has "sold")
+    offers-out-<n>.json  live sold-out offers (loaded only when "In stock only" is off or a drawer asks for them)
+                         meta.json "parts" = {"in": count, "out": count}
     hist/<n>.json      price history of offers whose price or stock changed, n = id % HIST_SHARDS
 Offer rows are arrays (see COLS); urls / images drop a per-store prefix (stores.json "up" / "ip").
 """
@@ -25,6 +26,7 @@ from .server import GROUPS, NUMERIC, meta, stores
 ROOT = Path(__file__).resolve().parent.parent
 STATIC = Path(__file__).resolve().parent / "static"
 HIST_SHARDS = 64
+PART_ROWS = 40000      # rows per offers file (~12 MB): GitHub refuses files over 100 MB, Raneen alone may add 170k offers
 COLS = ["id", "s", "title", "brand", "cat", "specs", "family", "model_key", "url", "image", "price", "old_price",
         "seller", "first_seen", "price_changed", "prev_price", "suspect"]
 
@@ -93,11 +95,16 @@ def export(out):
     # sold-out listings per model, so the drawer can say "+ n sold out" before offers-out.json is loaded
     sold = Counter(r["model_key"] for r in rows if not r["in_stock"] and r["model_key"])
     in_keys = {r["model_key"] for r in rows if r["in_stock"]}
-    sizes = {
-        "offers-in.json": _dump(out / "data/offers-in.json", {"cols": COLS, "rows": ins,
-                                                              "sold": {k: n for k, n in sold.items() if k in in_keys}}),
-        "offers-out.json": _dump(out / "data/offers-out.json", {"cols": COLS, "rows": outs}),
-    }
+    sizes, parts = {}, {}
+    for kind, rs in (("in", ins), ("out", outs)):
+        chunks = [rs[i:i + PART_ROWS] for i in range(0, len(rs), PART_ROWS)] or [[]]
+        parts[kind] = len(chunks)
+        for n, chunk in enumerate(chunks):
+            obj = {"cols": COLS, "rows": chunk}
+            if kind == "in" and n == 0:
+                obj["sold"] = {k: c for k, c in sold.items() if k in in_keys}
+            name = f"offers-{kind}-{n}.json"
+            sizes[name] = _dump(out / "data" / name, obj)
     # price history: only offers whose price or stock ever changed (others: one point = today's price)
     hist = defaultdict(dict)
     live = {r["id"] for r in rows}
@@ -124,7 +131,7 @@ def export(out):
     m.update({"cats": list(CATEGORIES), "pc": PC_CATEGORIES, "numeric": sorted(NUMERIC), "groups": GROUPS,
               "facet_labels": {k: v for k, v in FACETS.items()}, "hist_shards": HIST_SHARDS,
               "built": datetime.now(timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ"),
-              "sizes": sizes, "in_stock": len(ins), "sold_out": len(outs)})
+              "sizes": sizes, "parts": parts, "in_stock": len(ins), "sold_out": len(outs)})
     _dump(out / "data/meta.json", m)
     _dump(out / "data/stores.json", st)
     con.close()
