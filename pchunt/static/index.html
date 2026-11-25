@@ -1,0 +1,91 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>PC Hunt Egypt</title>
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='7' fill='%232563eb'/%3E%3Cpath d='M9 22l5-12 4 8 2-4 3 8' stroke='white' stroke-width='2.6' fill='none' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E">
+<link rel="stylesheet" href="app.css">
+</head>
+<body>
+<header class="top">
+  <a class="logo" href="#/"><span class="mark"></span>PC Hunt <small>Egypt</small></a>
+  <form class="searchbar" id="searchForm">
+    <input id="q" type="search" placeholder="Search every store: rtx 5070, 7800x3d, 32gb ddr5 6000, logitech keyboard price<2000" autocomplete="off">
+    <button type="submit">Search</button>
+    <button type="button" class="help" id="helpBtn" title="Search tips">?</button>
+  </form>
+  <nav class="links"><a href="#/" data-nav="search">Search</a><a href="#/stores" data-nav="stores">Stores</a></nav>
+</header>
+
+<main id="searchView" class="layout">
+  <aside class="side" id="side">
+    <section class="box"><h3>Category</h3><div id="cats" class="catlist"></div></section>
+    <section class="box">
+      <h3>Price (EGP)</h3>
+      <div class="range"><input id="pmin" type="number" min="0" placeholder="min"><span>-</span><input id="pmax" type="number" min="0" placeholder="max"></div>
+      <label class="chk"><input type="checkbox" id="stock" checked> In stock only</label>
+      <label class="chk"><input type="checkbox" id="deal"> Discounted only</label>
+      <label class="chk" title="Prices far below the usual price for that chip / model (rentals, parts named like the product, typos)"><input type="checkbox" id="hideSuspect" checked> Hide suspicious prices</label>
+    </section>
+    <div id="facets"></div>
+    <section class="box"><h3>Store type</h3><div id="groups" class="opts"></div></section>
+    <section class="box"><h3>Brand</h3><input class="filter" data-for="brands" placeholder="filter brands"><div id="brands" class="opts scroll"></div></section>
+    <section class="box"><h3>Store</h3><input class="filter" data-for="storesF" placeholder="filter stores"><div id="storesF" class="opts scroll"></div></section>
+  </aside>
+
+  <section class="results">
+    <div class="toolbar">
+      <div id="summary" class="summary"></div>
+      <div class="controls">
+        <div class="seg" id="viewSeg">
+          <button data-view="offers" class="on" title="Every listing from every store">All offers</button>
+          <button data-view="models" title="One card per product model with its cheapest store">Best price per model</button>
+        </div>
+        <select id="sort">
+          <option value="relevance">Best match</option>
+          <option value="price">Price: low to high</option>
+          <option value="-price">Price: high to low</option>
+          <option value="discount">Biggest discount</option>
+          <option value="drop">Biggest price drop</option>
+          <option value="new">Newest listings</option>
+        </select>
+        <button id="filtersBtn" class="ghost mobile-only">Filters</button>
+      </div>
+    </div>
+    <div id="chips" class="chips"></div>
+    <div id="grid" class="grid"></div>
+    <div id="pager" class="pager"></div>
+  </section>
+</main>
+
+<main id="storesView" class="page" hidden>
+  <h1>Stores</h1>
+  <p class="muted" id="storesSummary"></p>
+  <div class="tablewrap"><table id="storesTable"></table></div>
+</main>
+
+<footer class="foot" id="foot"></footer>
+
+<div id="help" class="helpbox" hidden>
+  <b>Search tips</b>
+  <table>
+    <tr><td><code>rtx 5070 ti</code></td><td>all the words (spacing does not matter: <code>rtx5070ti</code> works too)</td></tr>
+    <tr><td><code>"rog strix"</code></td><td>exact phrase</td></tr>
+    <tr><td><code>-laptop</code></td><td>leave out listings with a word</td></tr>
+    <tr><td><code>ddr5 OR ddr4</code></td><td>either word</td></tr>
+    <tr><td><code>brand:asus</code> <code>store:sigma</code> <code>cat:gpu</code></td><td>brand / store / category</td></tr>
+    <tr><td><code>price&lt;30000</code> <code>price:5000-9000</code></td><td>price range (EGP)</td></tr>
+  </table>
+  <p>A search that clearly names a kind of product (<code>logitech keyboard</code>, <code>rtx 5070</code>, <code>32gb ddr5</code>)
+  opens in that category; the chip above the results switches back to every category. Sold-out listings are hidden
+  unless you untick "In stock only".</p>
+</div>
+<div id="drawer" class="drawer" hidden>
+  <div class="drawer-bg" data-close></div>
+  <article class="drawer-card" id="drawerCard"></article>
+</div>
+<!--static-->
+<script type="module" src="app.js"></script>
+</body>
+</html>
