@@ -17,7 +17,10 @@ GIT = DATA / "pages.git"
 
 
 def git(*args, cwd=None):
-    return subprocess.run(["git", *args], cwd=cwd or ROOT, check=True, capture_output=True, text=True).stdout.strip()
+    p = subprocess.run(["git", *args], cwd=cwd or ROOT, capture_output=True, text=True)
+    if p.returncode:
+        raise RuntimeError(f"git {' '.join(args[:4])}: {p.stderr.strip()}")
+    return p.stdout.strip()
 
 
 def publish(do_export=True):
@@ -28,7 +31,7 @@ def publish(do_export=True):
     if GIT.exists():
         shutil.rmtree(GIT, ignore_errors=True)
     tree = ["--git-dir", str(GIT), "--work-tree", str(SITE)]
-    git("init", "-q", "-b", "gh-pages", str(GIT))
+    git("--git-dir", str(GIT), "init", "-q", "-b", "gh-pages")
     git(*tree, "add", "-A")
     git(*tree, "commit", "-q", "-m", f"Prices {datetime.now():%Y-%m-%d %H:%M}")
     git(*tree, "push", "-q", "--force", remote, "gh-pages")
